@@ -52,6 +52,11 @@ byte_t five_bits_right (uint32 num_int32) {
 }
 
 
+/* faz uma rotacao cirular de n bits */
+uint32 circular_rotation (uint32 bin, int n) {
+  return (bin  << n) | (bin  >> (32 - n));
+}
+
 /* cria um vetor de blocos de 128bits a partir de um vetor de bytes */
 uint128* block_generation (long file_size, byte_t *file_bytes, int cripto) {
   /* variaveis para andar no laço e n_blocks = numero de blocos dentro da funcao,
@@ -114,7 +119,47 @@ uint128* block_generation (long file_size, byte_t *file_bytes, int cripto) {
   significa que estamos criando blocos para a criptografia, entao o ultimo bloco
   deve ter o tamanho */
 
-  
+
 
   return array_blocks;
+}
+
+/* faz o xor entre dois blocos de 128bits */
+uint128 xor (uint128 x, uint128 y) {
+  uint128 xor_x_y;
+  xor_x_y.X = x.X ^ y.X;
+  xor_x_y.Y = x.Y ^ y.Y;
+  xor_x_y.W = x.W ^ y.W;
+  xor_x_y.Z = x.Z ^ y.Z;
+  return xor_x_y;
+}
+
+/* cria o primeiro bloco do cbc */
+uint128 block_VI_cbc () {
+  uint128 block_one_cbc;
+  block_one_cbc.X = 0xFF;
+  block_one_cbc.Y = 0xFF;
+  block_one_cbc.W = 0xFF;
+  block_one_cbc.Z = 0xFF;
+  return block_one_cbc;
+}
+
+byte_t* blocks_to_bytes (uint128 *blocks, long n_blocks) {
+  byte_t *bytes_array;
+  long i;
+
+  bytes_array = malloc (16 * n_blocks * sizeof (byte_t));
+
+  
+
+  return bytes_array;
+}
+
+/* le as sboxes */
+void sbox_read (char *file, uint32 sbox[]) {
+	int i;
+	FILE *in;
+	in = fopen (file, "r");
+	for (i = 0; i < 256; ++i)  fscanf (in, "%x", &sbox[i]);
+	fclose (in);
 }
