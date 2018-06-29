@@ -4,8 +4,9 @@
 uint128 key_creation (char* password) {
   byte_t bytes[4];
   uint32 blocks[4];
-  int i, j = 0, k = 0;
   uint128 key;
+  int i, j = 0, k = 0;
+
   for(i = 0; i < 16; i++){
     bytes[j++] = password[i];
     if( j == 4){
@@ -20,55 +21,8 @@ uint128 key_creation (char* password) {
   return key;
 }
 
-void sub_keys (uint128 inter_key, byte_t KR5[], uint32 KM32[]){
-	uint32 X, Y, W, Z;
-	X = inter_key.X;
-	Y = inter_key.Y;
-	W = inter_key.W;
-	Z = inter_key.Z;
-
-	KR5[0] = five_bits_right (X);
-	KR5[1] = five_bits_right (Y);
-	KR5[2] = five_bits_right (W);
-	KR5[3] = five_bits_right (Z);
-
-	KM32[0] = Z;
-	KM32[1] = W;
-	KM32[2] = Y;
-	KM32[3] = X;
-}
-
-uint32 f_1(uint32 X, byte_t KR5, uint32 KM32){
-  uint32 i, Y;
-	byte_t *bytes;
-	i = circular_rotation ((X ^ KM32), KR5);
-  bytes = uint32_to_byte (i);
-  Y = ((sbox_1[bytes[0]] + sbox_2[bytes[1]]) - sbox_3[bytes[2]]);
-  Y ^= sbox_4[bytes[3]];
-  return Y;
-}
-
-uint32 f_2(uint32 X, byte_t KR5, uint32 KM32){
-  uint32 i, Y;
-	byte_t *bytes;
-	i = circular_rotation ((X ^ KM32), KR5);
-  bytes = uint32_to_byte (i);
-  Y = ((sbox_1[bytes[0]] - sbox_2[bytes[1]]) ^ sbox_3[bytes[2]]);
-  Y += sbox_4[bytes[3]];
-  return Y;
-}
-
-uint32 f_3(uint32 X, byte_t KR5, uint32 KM32){
-  uint32 i, Y;
-	byte_t *bytes;
-	i = circular_rotation ((X ^ KM32), KR5);
-  bytes = uint32_to_byte (i);
-  Y = ((sbox_1[bytes[0]] ^ sbox_2[bytes[1]]) + sbox_3[bytes[2]]);
-  Y -= sbox_4[bytes[3]];
-  return Y;
-}
-
-uint128 intermediary_key (uint128 K_old, int iteration){
+/* gera a chave intermediaria a partir das constantes */
+uint128 intermediary_key (uint128 K_old, int iteration) {
 	uint128 inter_key, constant;
 	uint32 X, Y, W, Z;
 	X = K_old.X;
@@ -76,7 +30,8 @@ uint128 intermediary_key (uint128 K_old, int iteration){
 	W = K_old.W;
 	Z = K_old.Z;
 
-	if (iteration == 0){
+	if (iteration == 0) {
+    /* constante retirada do enunciado*/
 		constant.X = 0x5A827999;
 		constant.Y = 0x874AA67D;
 		constant.W = 0x657B7C8E;
@@ -99,11 +54,58 @@ uint128 intermediary_key (uint128 K_old, int iteration){
 	return inter_key;
 }
 
+void sub_keys (uint128 inter_key, byte_t KR5[], uint32 KM32[]) {
+	uint32 X, Y, W, Z;
+	X = inter_key.X;
+	Y = inter_key.Y;
+	W = inter_key.W;
+	Z = inter_key.Z;
+
+	KR5[0] = five_bits_right (X);
+	KR5[1] = five_bits_right (Y);
+	KR5[2] = five_bits_right (W);
+	KR5[3] = five_bits_right (Z);
+
+	KM32[0] = Z;
+	KM32[1] = W;
+	KM32[2] = Y;
+	KM32[3] = X;
+}
+
+uint32 f_1 (uint32 X, byte_t KR5, uint32 KM32) {
+  uint32 i, Y;
+	byte_t *bytes;
+	i = circular_rotation ((X ^ KM32), KR5);
+  bytes = uint32_to_byte (i);
+  Y = ((sbox_1[bytes[0]] + sbox_2[bytes[1]]) - sbox_3[bytes[2]]);
+  Y ^= sbox_4[bytes[3]];
+  return Y;
+}
+
+uint32 f_2 (uint32 X, byte_t KR5, uint32 KM32) {
+  uint32 i, Y;
+	byte_t *bytes;
+	i = circular_rotation ((X ^ KM32), KR5);
+  bytes = uint32_to_byte (i);
+  Y = ((sbox_1[bytes[0]] - sbox_2[bytes[1]]) ^ sbox_3[bytes[2]]);
+  Y += sbox_4[bytes[3]];
+  return Y;
+}
+
+uint32 f_3 (uint32 X, byte_t KR5, uint32 KM32) {
+  uint32 i, Y;
+	byte_t *bytes;
+	i = circular_rotation ((X ^ KM32), KR5);
+  bytes = uint32_to_byte (i);
+  Y = ((sbox_1[bytes[0]] ^ sbox_2[bytes[1]]) + sbox_3[bytes[2]]);
+  Y -= sbox_4[bytes[3]];
+  return Y;
+}
+
+
 /* faz uma interacao do algoritmo k128 */
-/* TODO: FALAR AQUI QUE COMO KR5 E KM32 SAO CONSTANTES EM UTILS, NAO AS USEI
-  NOS ARGUMENTOS DA FUNCAO */
-uint128 one_iteration (int iteration, uint128 int_key, uint128 value){
-  uint128 new_block;
+uint128 one_iteration (int iteration, uint128 int_key, uint128 value) {
+  uint128 block;
 	uint32 X, Y, W, Z;
 	uint32 KM32[4];
   byte_t KR5[4];
@@ -113,16 +115,43 @@ uint128 one_iteration (int iteration, uint128 int_key, uint128 value){
   W = value.W;
   Z = value.Z;
 
-	sub_keys(int_key, KR5, KM32);
-  W ^= f_2(Z, KR5[0], KM32[0]);
-  Y ^= f_1(W, KR5[1], KM32[1]);
-  X ^= f_3(Y, KR5[2], KM32[2]);
-  Z ^= f_2(X, KR5[3], KM32[3]);
+	sub_keys (int_key, KR5, KM32);
+  W ^= f_2 (Z, KR5[0], KM32[0]);
+  Y ^= f_1 (W, KR5[1], KM32[1]);
+  X ^= f_3 (Y, KR5[2], KM32[2]);
+  Z ^= f_2 (X, KR5[3], KM32[3]);
 
-  new_block.X = W;
-  new_block.Y = Y;
-  new_block.W = X;
-  new_block.Z = Z;
+  block.X = W;
+  block.Y = Y;
+  block.W = X;
+  block.Z = Z;
 
-  return new_block;
+  return block;
+}
+
+/* faz o inverso de uma iteracao algoritmo k128 */
+uint128 reverse_one_iteration (int iteration, uint128 int_key, uint128 value) {
+  uint128 block;
+	uint32 X, Y, W, Z;
+	uint32 KM32[4];
+  byte_t KR5[4];
+
+  W = value.X;
+  Y = value.Y;
+  X = value.W;
+  Z = value.Z;
+
+  sub_keys (int_key, KR5, KM32);
+
+  Z ^= f_2 (X, KR5[3], KM32[3]);
+  X ^= f_3 (Y, KR5[2], KM32[2]);
+  Y ^= f_1 (W, KR5[1], KM32[1]);
+  W ^= f_2 (Z, KR5[0], KM32[0]);
+
+  block.X = X;
+  block.Y = Y;
+  block.W = W;
+  block.Z = Z;
+
+  return block;
 }

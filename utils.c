@@ -14,6 +14,7 @@ int password_check (char *password) {
   return 0;
 }
 
+/* faz a concatenação da senha com ela mesma até obter o comprimento de 16bits*/
 char* password_concat (char *password) {
   int i, j, len;
   char *new_pass = malloc (16 * sizeof (char));
@@ -25,9 +26,6 @@ char* password_concat (char *password) {
   }
   return new_pass;
 }
-
-
-/* funcoes para manipulacao de bytes */
 
 /* converte um vetor de bytes em um inteiro de 32 bits */
 uint32 byte_to_uint32 (byte_t bytes[]) {
@@ -58,7 +56,7 @@ uint32 circular_rotation (uint32 bin, int n) {
 }
 
 /* cria um vetor de blocos de 128bits a partir de um vetor de bytes */
-uint128* block_generation (long file_size, byte_t *file_bytes, int cripto) {
+uint128* block_generation (long file_size, byte_t *file_bytes, long *number_blocks, int cripto) {
   /* variaveis para andar no laço e n_blocks = numero de blocos dentro da funcao,
     esse valor precisa ser passado para fora da funcao depois */
   long i, j, k, n_blocks;
@@ -73,6 +71,8 @@ uint128* block_generation (long file_size, byte_t *file_bytes, int cripto) {
   if (file_size % 16 == 0)  size_array = file_size / 16;
   else  size_array = file_size / 16 + 1;
   array_blocks = malloc (size_array * sizeof (uint128));
+
+
 
   j = k = n_blocks = 0;
   /* anda pelo vetor de bytes do arquivo de entrada. armazena quatro bytes
@@ -117,9 +117,17 @@ uint128* block_generation (long file_size, byte_t *file_bytes, int cripto) {
 
   /* Se a variavel cripto dos argumentos da funcao estiver setada para 1,
   significa que estamos criando blocos para a criptografia, entao o ultimo bloco
-  deve ter o tamanho */
+  deve conter o tamanho do arquivo original */
+  if (cripto == 1) {
+    uint128 last_block;
+    last_block.X = 0;
+    last_block.Y = 0;
+    last_block.W = 0;
+    last_block.Z = file_size;
+    array_blocks[n_blocks++] = last_block;
+  }
 
-
+  *number_blocks = n_blocks;
 
   return array_blocks;
 }
@@ -144,14 +152,23 @@ uint128 block_VI_cbc () {
   return block_one_cbc;
 }
 
-byte_t* blocks_to_bytes (uint128 *blocks, long n_blocks) {
-  byte_t *bytes_array;
-  long i;
-
-  bytes_array = malloc (16 * n_blocks * sizeof (byte_t));
-
-  
-
+/* cria um vetor de bytes a partir do vetor de blocos uint128 para ser printado
+  no arquivo de saída */
+byte_t* blocks_to_bytes (uint128 *blocks, int n_blocks) {
+  byte_t *four_bytes, *bytes_array;
+  long i, j, pos;
+  bytes_array = malloc (n_blocks * 16 * sizeof (byte_t));
+  pos = 0;
+  for (i = 0; i < n_blocks; i++) {
+    four_bytes = uint32_to_byte (blocks[i].X);
+    for (j = 0; j < 4; j++)  bytes_array[pos] = four_bytes[j];
+    four_bytes = uint32_to_byte (blocks[i].Y);
+    for (j = 0; j < 4; j++)  bytes_array[pos] = four_bytes[j];
+    four_bytes = uint32_to_byte (blocks[i].W);
+    for (j = 0; j < 4; j++)  bytes_array[pos] = four_bytes[j];
+    four_bytes = uint32_to_byte (blocks[i].Z);
+    for (j = 0; j < 4; j++)  bytes_array[pos] = four_bytes[j];
+  }
   return bytes_array;
 }
 
