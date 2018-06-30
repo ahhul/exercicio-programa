@@ -12,7 +12,7 @@ typedef unsigned int uint32;
 
 /* blocos que serao usados na criptografia */
 typedef struct{
-  uint32 X, Y, Z, W;
+  uint32 X, Y, W, Z;
 } uint128;
 
 /* vetores para guardas as sboxes */

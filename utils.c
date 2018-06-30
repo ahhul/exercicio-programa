@@ -105,16 +105,16 @@ uint128* block_generation (long file_size, byte_t *file_bytes, long *number_bloc
     converte esses bytes em um uint32. Quando temos 4 uint32 criamos um uint128
     que é um bloco. No final um vetor de uint128 baseado no arquivo de arquivo
     de entrada é criado*/
-
-  for (i = 0; i < size_array; i++) {
+  for (i = 0; i < file_size; i++) {
     four_bytes[j++] = file_bytes[i];
     if (j == 4) {
       four_32bits[k++] = byte_to_uint32 (four_bytes);
       if (k == 4) {
         array_blocks[n].X = four_32bits[0];
         array_blocks[n].Y = four_32bits[1];
-        array_blocks[n].Z = four_32bits[2];
-        array_blocks[n].W = four_32bits[3];
+        array_blocks[n].W = four_32bits[2];
+        array_blocks[n].Z = four_32bits[3];
+
         k = 0;
         n++;
       }
@@ -130,17 +130,16 @@ uint128* block_generation (long file_size, byte_t *file_bytes, long *number_bloc
     while (k < 4) {
       four_bytes[j++] = 0xFF;
       if (j == 4) {
-        four_32bits[k++] = byte_to_uint32 (four_bytes);
-        if (k == 4) {
-          array_blocks[n].X = four_32bits[0];
-          array_blocks[n].Y = four_32bits[1];
-          array_blocks[n].Z = four_32bits[2];
-          array_blocks[n].W = four_32bits[3];
-          n++;
-        }
         j = 0;
+        four_32bits[k++] = byte_to_uint32 (four_bytes);
       }
     }
+
+    array_blocks[n].X = four_32bits[0];
+    array_blocks[n].Y = four_32bits[1];
+    array_blocks[n].W = four_32bits[2];
+    array_blocks[n].Z = four_32bits[3];
+    n++;
   }
 
   /* Se a variavel cripto dos argumentos da funcao estiver setada para 1,
@@ -157,8 +156,6 @@ uint128* block_generation (long file_size, byte_t *file_bytes, long *number_bloc
   }
 
   *number_blocks = n_blocks;
-
-printf("%ld\n", n_blocks);
   return array_blocks;
 }
 

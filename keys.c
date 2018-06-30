@@ -41,12 +41,12 @@ uint128 intermediary_key (uint128 K_old, int iteration) {
 		inter_key.W = W ^ constant.W;
 		inter_key.Z = Z ^ constant.Z;
 	} else {
-		K_old.W ^= f_2(K_old.X, circular_rotation (ConstR, fmod(pow(iteration + 2, 2), 3)), circular_rotation (ConstM, fmod(pow(iteration + 3, 2), 7)));
-		K_old.Z ^= f_2(K_old.W, circular_rotation (ConstR, fmod(iteration + 2, 3)), circular_rotation (ConstM, fmod(iteration + 3, 7)));
-		K_old.Y ^= f_2(K_old.Z, circular_rotation (ConstR, fmod(pow(iteration + 2, 3), 3)), circular_rotation (ConstM, fmod(pow(iteration + 3, 3), 7)));
+		K_old.Z ^= f_2(K_old.X, circular_rotation (ConstR, fmod(pow(iteration + 2, 2), 3)), circular_rotation (ConstM, fmod(pow(iteration + 3, 2), 7)));
+		K_old.W ^= f_2(K_old.Z, circular_rotation (ConstR, fmod(iteration + 2, 3)), circular_rotation (ConstM, fmod(iteration + 3, 7)));
+		K_old.Y ^= f_2(K_old.W, circular_rotation (ConstR, fmod(pow(iteration + 2, 3), 3)), circular_rotation (ConstM, fmod(pow(iteration + 3, 3), 7)));
 		K_old.X ^= f_2(K_old.Y, circular_rotation (ConstR, fmod(pow(iteration + 2, 2), 3)), circular_rotation (ConstM, fmod(pow(iteration + 3, 2), 7)));
-		inter_key.X = K_old.W;
-		inter_key.Y = K_old.Z;
+		inter_key.X = K_old.Z;
+		inter_key.Y = K_old.W;
 		inter_key.W = K_old.Y;
 		inter_key.Z = K_old.X;
 	}
@@ -138,8 +138,8 @@ uint128 reverse_one_iteration (int iteration, uint128 int_key, uint128 value) {
 
   X = value.W;
   Y = value.Y;
-  Z = value.X;
-  W = value.Z;
+  W = value.X;
+  Z = value.Z;
 
   sub_keys (int_key, KR5, KM32);
 

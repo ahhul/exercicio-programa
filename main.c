@@ -30,11 +30,15 @@ int main (int argc, char *argv[]) {
   /* TODO: OPCAO -a, ta escrito na agenda. Colocar brancos no arquivo e apaga-lo da maquina */
 
   /* encriptacao */
-  if (strcmp (argv[1], "-c") == 0){
-      encryption (file_size, file_bytes, password, argv[5]);
+  if (strcmp (argv[1], "-c") == 0) {
+    printf("Iniciando a criptografia do arquivo: %s.\n", argv[3]);
+    encryption (file_size, file_bytes, password, argv[5]);
+    printf("Fim da criptografia.\n", );
   }
-  if (strcmp (argv[1], "-d") == 0){
-      decryption (file_size, file_bytes, password, argv[5]);
+  if (strcmp (argv[1], "-d") == 0) {
+    printf("Iniciando a decriptografia do arquivo: %s.\n", argv[3]);
+    decryption (file_size, file_bytes, password, argv[5]);
+    printf("Fim da decriptografia.\n", );
   }
 
 

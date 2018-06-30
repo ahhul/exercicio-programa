@@ -5,10 +5,11 @@
 uint128 block_encrypt_k128 (uint128 block, uint128 key) {
   uint128 encrypted_block, int_key;
   int i;
+  encrypted_block = block;
   for (i = 0; i < 12; i++) {
     /* cria a chave intermediaria e aplica uma iteracao do algoritmo com ela */
     int_key = intermediary_key (key, i);
-    encrypted_block = one_iteration (i, int_key, block);
+    encrypted_block = one_iteration (i, int_key, encrypted_block);
     key = int_key;
   }
   return encrypted_block;
@@ -42,8 +43,7 @@ void encryption (long file_size, byte_t *file_bytes, char* password, char* outpu
   long i, n_blocks;
 
   /* array de blocks uint128 para blocos do arquivo original  */
-  blocks = block_generation (file_size, file_bytes, &n_blocks, 0);
-  printf("%lu depois\n", n_blocks);
+  blocks = block_generation (file_size, file_bytes, &n_blocks, 1);
   /* cria o primeiro bloco com UMs do cbc */
   VI_cbc = block_VI_cbc();
   /* cria a chave */
@@ -54,11 +54,8 @@ void encryption (long file_size, byte_t *file_bytes, char* password, char* outpu
   /* faz o xor do cbc, encripta o bloco e atualiza o próximo bloco que será usado
   para */
   for (i = 0; i < n_blocks; i++) {
-    printf("i: %ld\n", i);
-    printf("BLOCO ORIGINAL: %x, %x, %x, %x, \n\n",  blocks[i].X,blocks[i].Y, blocks[i].W, blocks[i].Z);
     aux = xor (blocks[i], VI_cbc);
     encrypted[i] = block_encrypt_k128 (aux, key);
-    printf("BLOCO ENCRIPTADO: %x, %x, %x, %x, \n\n", encrypted[i].X,encrypted[i].Y, encrypted[i].W, encrypted[i].Z);
     VI_cbc = encrypted[i];
   }
 
@@ -89,26 +86,18 @@ void decryption (long file_size, byte_t *file_bytes, char* password, char* outpu
   /* faz o xor do cbc, encripta o bloco e atualiza o próximo bloco que será usado
   para */
   for (i = 0; i < n_blocks; i++) {
-    printf("i: %ld\n", i);
-    printf("BLOCO ENCRIPTADO: %x, %x, %x, %x, \n\n", blocks[i].X,blocks[i].Y, blocks[i].W, blocks[i].Z);
-
     /* precisa guardar esse bloco se não o valor é perdido */
     aux = blocks[i];
     decrypted[i] = block_decrypt_k128 (blocks[i], key);
     decrypted[i] = xor (decrypted[i], VI_cbc);
     VI_cbc = aux;
-    printf("BLOCO DECRIPTADO: %x, %x, %x, %x, \n\n", decrypted[i].X,decrypted[i].Y, decrypted[i].W, decrypted[i].Z);
-
   }
   /* pega o tamanho do arquivo original para */
-  size_decrypted = decrypted[i - 1].Z;
+  size_decrypted = decrypted[n_blocks - 1].Z;
   free(blocks);
-  printf("passei 1");
   /* transforma o vetor de blocos encriptados em um vetor de bytes */
   decrypted_bytes = blocks_to_bytes (decrypted, n_blocks);
-  printf("passei 2");
   /* salva no arquivo de saida */
   write_array_to_file (output, decrypted_bytes, size_decrypted);
-  printf("passei 3");
   free(decrypted);
 }
