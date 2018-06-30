@@ -1,5 +1,7 @@
+/* Criptografia e Segurança de Dados  */
+/* Exercício-programa 2018 - K128     */
+/* Ludmila Ferreira Vicente e Silva   */
 #include "utils.h"
-
 
 /* Funcoes para senha e geracao da chave */
 int password_check (char *password) {

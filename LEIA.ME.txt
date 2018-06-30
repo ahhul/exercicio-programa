@@ -15,12 +15,13 @@ Para compilar e criar o executável, execute o seguinte comando no diretório do
   $ make
 
 Para executar no modo de criptografia:
-  $ ./k128 -c -i <arquivo de entrada> -o <arquivo de saída> -p <senha> -a
-
+  $ ./k128 -c -i <arquivo de entrada> -o <arquivo de saída> -p <senha>
 
 Para executar no modo de decriptografia:
-  $ ./k128 -d -i <arquivo de entrada> -o <arquivo de saída> -p <senha> -a
+  $ ./k128 -d -i <arquivo de entrada> -o <arquivo de saída> -p <senha>
 
+Para apagar o arquivo de entrada, passe a opção -a no fim do argumento, como no exemplo:
+  $ ./k128 -c -i <arquivo de entrada> -o <arquivo de saída> -p <senha> -a
 
 Computador utilizado:
   Processador: Intel® Core™ i7-7500U CPU @ 2.70GHz × 4

@@ -1,3 +1,6 @@
+/* Criptografia e Segurança de Dados  */
+/* Exercício-programa 2018 - K128     */
+/* Ludmila Ferreira Vicente e Silva   */
 #include "keys.h"
 
 /* gera a chave principal */
