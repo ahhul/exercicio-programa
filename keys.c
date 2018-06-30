@@ -136,10 +136,10 @@ uint128 reverse_one_iteration (int iteration, uint128 int_key, uint128 value) {
 	uint32 KM32[4];
   byte_t KR5[4];
 
-  W = value.X;
-  Y = value.Y;
   X = value.W;
-  Z = value.Z;
+  Y = value.Y;
+  Z = value.X;
+  W = value.Z;
 
   sub_keys (int_key, KR5, KM32);
 

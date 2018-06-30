@@ -19,7 +19,7 @@ typedef struct{
 uint32_t sbox_1[256], sbox_2[256], sbox_3[256], sbox_4[256];
 
 
-/*-------------------- SENHA E CHAVE K --------------------*/
+/*------------------------ SENHA --------------------------*/
 
 /* avalia se a senha digitada é válida */
 int password_check (char *password);
@@ -40,7 +40,10 @@ byte_t* uint32_to_byte (uint32 num_int32);
 byte_t five_bits_right (uint32 num_int32);
 
 /* faz uma rotacao cirular de n bits */
-uint32 circular_rotation (uint32 bin, int n);
+uint32 circular_rotation (uint32 bin, byte_t n);
+
+
+/*----------------- MANIPULACAO DE BLOCOS -----------------*/
 
 /* cria um vetor de blocos de 128bits a partir de um vetor de bytes.
   A flag cripto setada em 1, significa que estamos criando blocos
@@ -56,6 +59,9 @@ uint128 block_VI_cbc ();
 /* cria um vetor de bytes a partir do vetor de blocos uint128 para ser printado
   no arquivo de saída */
 byte_t* blocks_to_bytes (uint128 *blocks, int n_blocks);
+
+
+/*------------------------ SBOXES -----------------------*/
 
 /* le as sboxes */
 void sbox_read (char *file, uint32 sbox[]);

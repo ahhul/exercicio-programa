@@ -1,0 +1,28 @@
+Aluna: Ludmila Ferreira Vicente e Silva	NUSP: 7557136
+Exercício-Programa Criptografia e Segurança de Dados 2018
+
+
+O sarquivos inclusos são:
+  - hexdump.c e hexdump.h:  para a leitura do arquivo, disponibilizado no PACA
+  - keys.c e keys.h:  para a geração das chaves e subchaves, funções f1, f2, f3 do enunciado, funções para iteração do algoritmo K128
+  - utils.c e utils.h:  onde estão as funções para geração da senha, manipulação de bytes e manipulação de blocos
+  - encryption.c e encryption.h: funções para encriptar decriptar os blocos e o arquivo de entrada
+  - main: onde está o programa principal
+  - Makefile
+
+
+Para compilar e criar o executável, execute o seguinte comando no diretório do trabalho:
+  $ make
+
+Para executar no modo de criptografia:
+  $ ./k128 -c -i <arquivo de entrada> -o <arquivo de saída> -p <senha> -a
+
+
+Para executar no modo de decriptografia:
+  $ ./k128 -d -i <arquivo de entrada> -o <arquivo de saída> -p <senha> -a
+
+
+Computador utilizado:
+  Processador: Intel® Core™ i7-7500U CPU @ 2.70GHz × 4
+  Memória: 7,7 GiB
+  Sistema operacional: Ubuntu 17.10 - 64-bit

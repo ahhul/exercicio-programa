@@ -24,15 +24,17 @@ int main (int argc, char *argv[]) {
     printf ("A senha digitada nao esta dentro da especificacao.\n");
   }
 
-  /*encryption (file_size, file_bytes, password, argv[5]);*/
-  decryption (file_size, file_bytes, password, argv[5]);
+  /*encryption (file_size, file_bytes, password, argv[5]);
+  decryption (file_size, file_bytes, password, argv[5]);*/
 
   /* TODO: OPCAO -a, ta escrito na agenda. Colocar brancos no arquivo e apaga-lo da maquina */
 
   /* encriptacao */
-  if (strcmp (argv[1], "-c") == 1){
-    printf("PASSEI HUE");
+  if (strcmp (argv[1], "-c") == 0){
       encryption (file_size, file_bytes, password, argv[5]);
+  }
+  if (strcmp (argv[1], "-d") == 0){
+      decryption (file_size, file_bytes, password, argv[5]);
   }
 
 

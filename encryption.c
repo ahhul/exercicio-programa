@@ -21,6 +21,7 @@ uint128 block_decrypt_k128 (uint128 block, uint128 key) {
   uint128 decrypted_block, int_key[12];
   int i;
 
+  decrypted_block = block;
   /* gera todas as subchaves primeiro*/
   for (i = 0; i < 12; i++) {
     int_key[i] = intermediary_key (key, i);
@@ -28,8 +29,8 @@ uint128 block_decrypt_k128 (uint128 block, uint128 key) {
     key = int_key[i];
   }
 
-  for (i = 12; i > 0; i--) {
-    decrypted_block = reverse_one_iteration (i, int_key[i], block);
+  for (i = 11; i >= 0; i--) {
+    decrypted_block = reverse_one_iteration (i, int_key[i], decrypted_block);
   }
   return decrypted_block;
 }
@@ -39,10 +40,10 @@ void encryption (long file_size, byte_t *file_bytes, char* password, char* outpu
   uint128 *blocks, *encrypted, aux, VI_cbc, key;
   byte_t *encrypted_bytes;
   long i, n_blocks;
-  n_blocks = 0;
 
   /* array de blocks uint128 para blocos do arquivo original  */
-  blocks = block_generation (file_size, file_bytes, &n_blocks, 1);
+  blocks = block_generation (file_size, file_bytes, &n_blocks, 0);
+  printf("%lu depois\n", n_blocks);
   /* cria o primeiro bloco com UMs do cbc */
   VI_cbc = block_VI_cbc();
   /* cria a chave */
@@ -53,52 +54,61 @@ void encryption (long file_size, byte_t *file_bytes, char* password, char* outpu
   /* faz o xor do cbc, encripta o bloco e atualiza o próximo bloco que será usado
   para */
   for (i = 0; i < n_blocks; i++) {
+    printf("i: %ld\n", i);
+    printf("BLOCO ORIGINAL: %x, %x, %x, %x, \n\n",  blocks[i].X,blocks[i].Y, blocks[i].W, blocks[i].Z);
     aux = xor (blocks[i], VI_cbc);
     encrypted[i] = block_encrypt_k128 (aux, key);
+    printf("BLOCO ENCRIPTADO: %x, %x, %x, %x, \n\n", encrypted[i].X,encrypted[i].Y, encrypted[i].W, encrypted[i].Z);
     VI_cbc = encrypted[i];
   }
-  free(blocks);
 
   /* transforma o vetor de blocos encriptados em um vetor de bytes */
   encrypted_bytes = blocks_to_bytes (encrypted, n_blocks);
   /* salva no arquivo de saida*/
   write_array_to_file (output, encrypted_bytes, 16 * n_blocks);
-  free(encrypted);
+
 }
 
 /* faz a decriptacao do arquivo de entrada */
 void decryption (long file_size, byte_t *file_bytes, char* password, char* output) {
-  uint128 *blocks, *decripted, aux, VI_cbc, key;
-  byte_t *decripted_bytes;
-  long i, n_blocks, size_decripted;
+  uint128 *blocks, *decrypted, aux, VI_cbc, key;
+  byte_t *decrypted_bytes;
+  long i, n_blocks, size_decrypted;
   n_blocks = 0;
 
   /* array de blocks uint128 para blocos do arquivo original a ser
   descriptografado  */
-  blocks = block_generation (file_size, file_bytes, &n_blocks, 1);
+  blocks = block_generation (file_size, file_bytes, &n_blocks, 0);
   /* cria o primeiro bloco com UMs do cbc */
   VI_cbc = block_VI_cbc();
   /* cria a chave */
   key = key_creation (password);
   /* array para blocos encriptados */
-  decripted = malloc (n_blocks * sizeof(uint128));
+  decrypted = malloc (n_blocks * sizeof(uint128));
 
   /* faz o xor do cbc, encripta o bloco e atualiza o próximo bloco que será usado
   para */
   for (i = 0; i < n_blocks; i++) {
+    printf("i: %ld\n", i);
+    printf("BLOCO ENCRIPTADO: %x, %x, %x, %x, \n\n", blocks[i].X,blocks[i].Y, blocks[i].W, blocks[i].Z);
+
     /* precisa guardar esse bloco se não o valor é perdido */
     aux = blocks[i];
-    decripted[i] = block_decrypt_k128 (blocks[i], key);
-    decripted[i] = xor (decripted[i], VI_cbc);
+    decrypted[i] = block_decrypt_k128 (blocks[i], key);
+    decrypted[i] = xor (decrypted[i], VI_cbc);
     VI_cbc = aux;
+    printf("BLOCO DECRIPTADO: %x, %x, %x, %x, \n\n", decrypted[i].X,decrypted[i].Y, decrypted[i].W, decrypted[i].Z);
+
   }
   /* pega o tamanho do arquivo original para */
-  size_decripted = decripted[i - 1].Z;
+  size_decrypted = decrypted[i - 1].Z;
   free(blocks);
-
+  printf("passei 1");
   /* transforma o vetor de blocos encriptados em um vetor de bytes */
-  decripted_bytes = blocks_to_bytes (decripted, n_blocks);
+  decrypted_bytes = blocks_to_bytes (decrypted, n_blocks);
+  printf("passei 2");
   /* salva no arquivo de saida */
-  write_array_to_file (output, decripted_bytes, size_decripted);
-  free(decripted);
+  write_array_to_file (output, decrypted_bytes, size_decrypted);
+  printf("passei 3");
+  free(decrypted);
 }

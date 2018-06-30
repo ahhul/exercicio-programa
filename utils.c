@@ -29,10 +29,30 @@ char* password_concat (char *password) {
 
 /* converte um vetor de bytes em um inteiro de 32 bits */
 uint32 byte_to_uint32 (byte_t bytes[]) {
-  uint32 num_int32;
-  num_int32 = (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | (bytes[3] << 0);
-  return num_int32;
+  uint32 big = 0;
+  int numberOfHexDigits = 8;
+  uint32 powerOf16 = (1 << (4*(numberOfHexDigits-1)));
+  int i;
+
+  for(i = 0; i < 4; i++){
+    byte_t b = bytes[i];
+
+    uint32 higher = b/16;
+    uint32 lower = b%16;
+
+    big += powerOf16*higher;
+
+    powerOf16 /= 16;
+
+    big +=  powerOf16*(lower);
+
+    powerOf16 /= 16;
+
+  }
+  return big;
 }
+
+
 
 /* converte um inteiro de 32 bits em um vetor de bytes*/
 byte_t* uint32_to_byte (uint32 num_int32) {
@@ -51,7 +71,7 @@ byte_t five_bits_right (uint32 num_int32) {
 
 
 /* faz uma rotacao cirular de n bits */
-uint32 circular_rotation (uint32 bin, int n) {
+uint32 circular_rotation (uint32 bin, byte_t n) {
   return (bin  << n) | (bin  >> (32 - n));
 }
 
@@ -59,7 +79,7 @@ uint32 circular_rotation (uint32 bin, int n) {
 uint128* block_generation (long file_size, byte_t *file_bytes, long *number_blocks, int cripto) {
   /* variaveis para andar no laço e n_blocks = numero de blocos dentro da funcao,
     esse valor precisa ser passado para fora da funcao depois */
-  long i, j, k, n_blocks;
+  long i, j, k, n_blocks, n; /* n pra acessar os índices*/
   long size_array;
   /* vetor de blocks que será retornado*/
   uint128* array_blocks;
@@ -70,28 +90,36 @@ uint128* block_generation (long file_size, byte_t *file_bytes, long *number_bloc
   /* calcula qual o tamanho o vetor de blocos deve ter e o aloca */
   if (file_size % 16 == 0)  size_array = file_size / 16;
   else  size_array = file_size / 16 + 1;
-  array_blocks = malloc (size_array * sizeof (uint128));
 
+  /* blocos de cripto tem um bloco adicional com o tamanho */
+  if (cripto == 1) {
+    array_blocks = malloc ((size_array + 1) * sizeof (uint128));
+    n_blocks = size_array + 1;
+  }else {
+    array_blocks = malloc (size_array * sizeof (uint128));
+    n_blocks = size_array;
+  }
 
-
-  j = k = n_blocks = 0;
+  j = k = n = 0;
   /* anda pelo vetor de bytes do arquivo de entrada. armazena quatro bytes
     converte esses bytes em um uint32. Quando temos 4 uint32 criamos um uint128
     que é um bloco. No final um vetor de uint128 baseado no arquivo de arquivo
     de entrada é criado*/
+
   for (i = 0; i < size_array; i++) {
     four_bytes[j++] = file_bytes[i];
     if (j == 4) {
       four_32bits[k++] = byte_to_uint32 (four_bytes);
       if (k == 4) {
-        array_blocks[n_blocks].X = four_32bits[0];
-        array_blocks[n_blocks].Y = four_32bits[1];
-        array_blocks[n_blocks].Z = four_32bits[2];
-        array_blocks[n_blocks].W = four_32bits[3];
+        array_blocks[n].X = four_32bits[0];
+        array_blocks[n].Y = four_32bits[1];
+        array_blocks[n].Z = four_32bits[2];
+        array_blocks[n].W = four_32bits[3];
         k = 0;
-        n_blocks++;
+        n++;
       }
       j = 0;
+
     }
   }
 
@@ -104,11 +132,11 @@ uint128* block_generation (long file_size, byte_t *file_bytes, long *number_bloc
       if (j == 4) {
         four_32bits[k++] = byte_to_uint32 (four_bytes);
         if (k == 4) {
-          array_blocks[n_blocks].X = four_32bits[0];
-          array_blocks[n_blocks].Y = four_32bits[1];
-          array_blocks[n_blocks].Z = four_32bits[2];
-          array_blocks[n_blocks].W = four_32bits[3];
-          n_blocks++;
+          array_blocks[n].X = four_32bits[0];
+          array_blocks[n].Y = four_32bits[1];
+          array_blocks[n].Z = four_32bits[2];
+          array_blocks[n].W = four_32bits[3];
+          n++;
         }
         j = 0;
       }
@@ -124,11 +152,13 @@ uint128* block_generation (long file_size, byte_t *file_bytes, long *number_bloc
     last_block.Y = 0;
     last_block.W = 0;
     last_block.Z = file_size;
-    array_blocks[n_blocks++] = last_block;
+    array_blocks[n] = last_block;
+    n++;
   }
 
   *number_blocks = n_blocks;
 
+printf("%ld\n", n_blocks);
   return array_blocks;
 }
 
@@ -145,10 +175,10 @@ uint128 xor (uint128 x, uint128 y) {
 /* cria o primeiro bloco do cbc */
 uint128 block_VI_cbc () {
   uint128 block_one_cbc;
-  block_one_cbc.X = 0xFF;
-  block_one_cbc.Y = 0xFF;
-  block_one_cbc.W = 0xFF;
-  block_one_cbc.Z = 0xFF;
+  block_one_cbc.X = 0xFFFFFFFF;
+  block_one_cbc.Y = 0xFFFFFFFF;
+  block_one_cbc.W = 0xFFFFFFFF;
+  block_one_cbc.Z = 0xFFFFFFFF;
   return block_one_cbc;
 }
 
@@ -161,13 +191,13 @@ byte_t* blocks_to_bytes (uint128 *blocks, int n_blocks) {
   pos = 0;
   for (i = 0; i < n_blocks; i++) {
     four_bytes = uint32_to_byte (blocks[i].X);
-    for (j = 0; j < 4; j++)  bytes_array[pos] = four_bytes[j];
+    for (j = 0; j < 4; j++)  bytes_array[pos++] = four_bytes[j];
     four_bytes = uint32_to_byte (blocks[i].Y);
-    for (j = 0; j < 4; j++)  bytes_array[pos] = four_bytes[j];
+    for (j = 0; j < 4; j++)  bytes_array[pos++] = four_bytes[j];
     four_bytes = uint32_to_byte (blocks[i].W);
-    for (j = 0; j < 4; j++)  bytes_array[pos] = four_bytes[j];
+    for (j = 0; j < 4; j++)  bytes_array[pos++] = four_bytes[j];
     four_bytes = uint32_to_byte (blocks[i].Z);
-    for (j = 0; j < 4; j++)  bytes_array[pos] = four_bytes[j];
+    for (j = 0; j < 4; j++)  bytes_array[pos++] = four_bytes[j];
   }
   return bytes_array;
 }
